@@ -172,14 +172,13 @@ window.addEventListener('mouseup', () => (pan = false));
 /* ---------- localStorage ---------- */
 function save() {
   const buf = [...bufferZone.children].map(el => el.dataset.points);
-  const wrk = [...viewport.querySelectorAll('poly-item')].map(el => {
-    const wrapper = el.closest('foreignObject');
-    return {
-      p: el.dataset.points,
-      x: +wrapper.getAttribute('x'),
-      y: +wrapper.getAttribute('y')
-    };
-  });
+  const wrk = [...viewport.children]
+    .filter(n => n.nodeName === 'foreignObject')
+    .map(fo => ({
+      p: fo.firstElementChild.dataset.points,
+      x: +fo.getAttribute('x'),
+      y: +fo.getAttribute('y')
+    }));
   localStorage.setItem('polygons', JSON.stringify({ buf, wrk, scale, ox, oy }));
 }
 function load() {
