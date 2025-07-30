@@ -171,15 +171,15 @@ window.addEventListener('mouseup', () => (pan = false));
 
 /* ---------- localStorage ---------- */
 function save() {
-  const buf = Array.from(bufferZone.children, el => el.dataset.points);
-  const wrk = Array.from(
-    viewport.querySelectorAll('foreignObject'),
-    fo => ({
-      p: fo.firstElementChild.dataset.points,
-      x: fo.getAttribute('x'),
-      y: fo.getAttribute('y'),
-    })
-  );
+  const buf = [...bufferZone.children].map(el => el.dataset.points);
+  const wrk = [...viewport.querySelectorAll('poly-item')].map(el => {
+    const wrapper = el.closest('foreignObject');
+    return {
+      p: el.dataset.points,
+      x: +wrapper.getAttribute('x'),
+      y: +wrapper.getAttribute('y')
+    };
+  });
   localStorage.setItem('polygons', JSON.stringify({ buf, wrk, scale, ox, oy }));
 }
 function load() {
@@ -188,9 +188,17 @@ function load() {
   try {
     const { buf, wrk, scale: s, ox: tx, oy: ty } = JSON.parse(raw);
     buf.forEach(str => addPolyToBuffer(str));
-    wrk.forEach(({ p, x, y }) =>
-      addPolyToWork(p, +x + 40, +y + 40)
-    );
+    wrk.forEach(({ p, x, y }) => {
+      const fo = document.createElementNS(SVG, 'foreignObject');
+      fo.setAttribute('x', x);
+      fo.setAttribute('y', y);
+      fo.setAttribute('width', 80);
+      fo.setAttribute('height', 80);
+      const el = document.createElement('poly-item');
+      el.dataset.points = p;
+      fo.append(el);
+      viewport.append(fo);
+    });
     scale = s;
     ox = tx;
     oy = ty;
